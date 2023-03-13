@@ -102,6 +102,9 @@ impl<'a> Integration<'a> {
         conn_opts_b.keep_alive_interval(conf.keep_alive_interval);
         conn_opts_b.user_name(&conf.username);
         conn_opts_b.password(&conf.password);
+        if !conf.failover_servers.is_empty() {
+            conn_opts_b.server_uris(&conf.failover_servers);
+        }
         if !conf.ca_cert.is_empty() || !conf.tls_cert.is_empty() || !conf.tls_key.is_empty() {
             info!(
                 ca_cert = %conf.ca_cert,

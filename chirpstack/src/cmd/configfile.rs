@@ -323,6 +323,13 @@ pub fn run() {
     # MQTT server (e.g. scheme://host:port where scheme is tcp, ssl or ws)
     server="{{ integration.mqtt.server }}"
 
+    # MQTT fail-over servers, same format as server above.
+    failover_servers = [
+        {{#each integration.mqtt.failover_servers}}
+        "{{this}}",
+        {{/each}}
+    ]
+
     # Connect with the given username (optional)
     username="{{ integration.mqtt.username }}"
 
