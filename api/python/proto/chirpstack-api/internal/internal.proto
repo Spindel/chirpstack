@@ -137,6 +137,12 @@ message DeviceSession {
 
     // Region configuration ID.
     string region_config_id = 40;
+
+    // Device-override of Min DR (optional)
+    DataRateOverride min_dr = 98;
+
+    // Device-override of Max DR (optional)
+    DataRateOverride max_dr = 99;
 }
 
 message UplinkAdrHistory {
@@ -275,4 +281,25 @@ message PassiveRoamingDeviceSession {
 
     // Validate MIC.
     bool validate_mic = 9;
+}
+
+enum DataRateOverride {
+    // Default value is Unset
+    UNSET = 0;
+    DR0 = 1;
+    DR1 = 2;
+    DR2 = 3;
+    DR3 = 4;
+    DR4 = 5;
+    DR5 = 6;
+    DR6 = 7;
+    DR7 = 8;
+    DR8 = 9;
+    DR9 = 10;
+    DR10 = 11;
+    DR11 = 12;
+    DR12 = 13;
+    DR13 = 14;
+    DR14 = 15;
+    DR15 = 16;
 }

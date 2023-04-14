@@ -435,6 +435,9 @@ impl Data {
         Ok(())
     }
 
+    // Spindel: continue here
+    // decryptFOptsMACCommands  in Go code
+    //
     fn decrypt_f_opts_mac_commands(&mut self) -> Result<()> {
         trace!("Decrypting mac-commands");
         let ds = self.device_session.as_ref().unwrap();
@@ -460,7 +463,6 @@ impl Data {
 
         Ok(())
     }
-
     fn decrypt_frm_payload(&mut self) -> Result<()> {
         trace!("Decrypting FRMPayload");
         let ds = self.device_session.as_ref().unwrap();
