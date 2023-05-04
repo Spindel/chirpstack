@@ -315,7 +315,6 @@ pub async fn handle_uplink(deduplication_id: Uuid, uplink: gw::UplinkFrameSet) -
     // TODO: Inject LogEntry here
     //let log_entry = messagelog::LogEntry { }
 
-
     match uplink.phy_payload.mhdr.m_type {
         MType::JoinRequest => join::JoinRequest::handle(uplink).await,
         MType::UnconfirmedDataUp | MType::ConfirmedDataUp => data::Data::handle(uplink).await,

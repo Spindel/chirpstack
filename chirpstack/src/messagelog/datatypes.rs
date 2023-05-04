@@ -1,42 +1,47 @@
-use crate::config;
-
+use ::backend::{
+    BasePayload, HomeNSAnsPayload, HomeNSReqPayload, JoinAnsPayload, JoinReqPayload,
+    PRStartAnsPayload, PRStartReqPayload, ULMetaData, XmitDataAnsPayload, XmitDataReqPayload,
+};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
-use uuid::Uuid;
-
+// use backend::Answer;
+use chirpstack_api::gw;
+//{common, gw};
 use lrwn::EUI64;
+use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct RxPacket {
     // Seea crate::uplink::UplinkFrameSet and api::UplinkFrameLog  for similar but
     // not exactly the same data-structures
     #[serde(rename = "DR")]
-    dr: i64,
+    pub dr: i64,
 
     #[serde(rename = "TXInfo")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    tx_info: Option<gw::UplinkTxInfo>,
+    pub tx_info: Option<gw::UplinkTxInfo>,
 
     #[serde(rename = "RXInfoSet")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    rx_info_set: Vec<gw::UplinkRxInfo>,
+    pub rx_info_set: Vec<gw::UplinkRxInfo>,
 
     #[serde(rename = "GatewayIsPrivate")] // Hmm. Should this be remaining as-is or split the way
     // uplink data does it in v4?
     #[serde(skip_serializing_if = "HashMap::is_empty")]
-    gateway_is_private: HashMap<EUI64, bool>,
+    pub gateway_is_private: HashMap<EUI64, bool>,
 
     #[serde(rename = "GatewayServiceProfile")]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
-    gateway_service_profile: HashMap<EUI64, Uuid>, // This one is probably renamed
+    pub gateway_service_profile: HashMap<EUI64, Uuid>, // This one is probably renamed
     // gateway_tenant_id_map   rather than
     // gateway_service_profile
     #[serde(rename = "RoamingMetaData")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    roaming_meta_data: Option<RoamingMetaData>,
+    pub roaming_meta_data: Option<RoamingMetaData>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct RoamingMetaData {
     #[serde(rename = "BasePayload")]
     pub base_payload: BasePayload,
@@ -47,12 +52,12 @@ pub struct RoamingMetaData {
 #[derive(Debug, Clone, Serialize)]
 pub struct TxPacket {
     #[serde(rename = "PHYPayload")]
-    phy_payload: lrwn::PhyPayload,
+    pub phy_payload: lrwn::PhyPayload,
     #[serde(rename = "DownlinkTXInfo")]
-    downlink_tx_info: Option<gw::DownlinkTxInfo>, // TODO: This maybe should be
+    pub downlink_tx_info: Option<gw::DownlinkTxInfo>, // TODO: This maybe should be
     // DownlinkTxInfoLegacy
     #[serde(rename = "TimeOnAir")]
-    time_on_air: f64,
+    pub time_on_air: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Default)]
@@ -132,6 +137,7 @@ impl LogEntryBuilder {
 #[derive(Debug, Clone, Serialize, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct LogEntry {
+    // CtxID          interface{}
     #[serde(rename = "CtxID")]
     pub ctx_id: Uuid,
     pub publish_at: DateTime<Utc>,
@@ -151,43 +157,43 @@ pub struct LogEntry {
     //        RXPacket       *RXPacket                     `json:"RXPacket,omitempty"`
     #[serde(rename = "RXPacket")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_packet: Option<RxPacket>,
+    pub rx_packet: Option<RxPacket>,
     //        TXPacket       []*TXPacket                   `json:"TXPacket,omitempty"`
     #[serde(rename = "TXPacket")]
     #[serde(skip_serializing_if = "Vec::is_empty")]
-    tx_packet: Vec<TxPacket>,
+    pub tx_packet: Vec<TxPacket>,
     //        TXAck          *TXPacket                     `json:"TXAck,omitempty"`
     #[serde(rename = "TXAck")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    tx_ack: Option<TxPacket>,
+    pub tx_ack: Option<TxPacket>,
     //        JoinReq        *lwbackend.JoinReqPayload     `json:"JoinReq,omitempty"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    join_req: Option<JoinReqPayload>,
+    pub join_req: Option<JoinReqPayload>,
     //        JoinAns        *lwbackend.JoinAnsPayload     `json:"JoinAns,omitempty"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    join_ans: Option<JoinAnsPayload>,
+    pub join_ans: Option<JoinAnsPayload>,
     //        PRStartReq     *lwbackend.PRStartReqPayload  `json:"PRStartReq,omitempty"`
     #[serde(rename = "PRStartReq")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pr_start_req: Option<PRStartReqPayload>,
+    pub pr_start_req: Option<PRStartReqPayload>,
     //        PRStartAns     *lwbackend.PRStartAnsPayload  `json:"PRStartAns,omitempty"`
     #[serde(rename = "PRStartAns")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pr_start_ans: Option<PRStartAnsPayload>,
+    pub pr_start_ans: Option<PRStartAnsPayload>,
     //        HomeNSReq      *lwbackend.HomeNSReqPayload   `json:"HomeNSReq,omitempty"`
     #[serde(rename = "HomeNSReq")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    home_ns_req: Option<HomeNSReqPayload>,
+    pub home_ns_req: Option<HomeNSReqPayload>,
     //        HomeNSAns      *lwbackend.HomeNSAnsPayload   `json:"HomeNSAns,omitempty"`
     #[serde(rename = "HomeNSAns")]
     #[serde(skip_serializing_if = "Option::is_none")]
-    home_ns_ans: Option<HomeNSAnsPayload>,
+    pub home_ns_ans: Option<HomeNSAnsPayload>,
     //        XmitDataReq    *lwbackend.XmitDataReqPayload `json:"XmitDataReq,omitempty"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    xmit_data_req: Option<XmitDataReqPayload>,
+    pub xmit_data_req: Option<XmitDataReqPayload>,
     //        XmitDataAns    *lwbackend.XmitDataAnsPayload `json:"XmitDataAns,omitempty"`
     #[serde(skip_serializing_if = "Option::is_none")]
-    xmit_data_ans: Option<XmitDataAnsPayload>,
+    pub xmit_data_ans: Option<XmitDataAnsPayload>,
     // Answer         *lwbackend.Answer             `json:"Answer,omitempty"`
     //TODO: This one I cant find as a struct.
     //      Investigate it, and see what it is expected to contain
