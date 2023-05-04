@@ -140,19 +140,31 @@ pub struct LogEntry {
     // CtxID          interface{}
     #[serde(rename = "CtxID")]
     pub ctx_id: Uuid,
+    // .... unknown if needed
+    // PublishAt      time.Time
     pub publish_at: DateTime<Utc>,
+    // CreatedAt      time.Time
     pub created_at: DateTime<Utc>,
+    // LogSource      Endpoint
     pub log_source: Endpoint,
+    // SourceID       string
     #[serde(rename = "SourceID")]
     pub source_id: String,
+    // LogDestination Endpoint
     pub log_destination: Endpoint,
+    //DestinationID  string
     #[serde(rename = "DestinationID")]
     pub destination_id: String,
+    // FrameStatus    FrameStatus
     pub frame_status: FrameStatus,
+    //        TimeOnAir      float64
     pub time_on_air: f64,
+    //        DevAddr        lorawan.DevAddr
     pub dev_addr: lrwn::DevAddr,
+    //        DevEUI         lorawan.EUI64
     #[serde(rename = "DevEUI")]
     pub dev_eui: EUI64, // backend uses Vec<u8> here with a hex_encode encoder.
+    //        KnownDevice    bool
     pub known_device: bool,
     //        RXPacket       *RXPacket                     `json:"RXPacket,omitempty"`
     #[serde(rename = "RXPacket")]
