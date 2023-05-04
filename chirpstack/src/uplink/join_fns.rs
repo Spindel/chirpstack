@@ -40,6 +40,7 @@ impl JoinRequest {
 
         ctx.filter_rx_info_by_public_only()?;
         ctx.get_home_net_id().await?;
+        // TODO: messagelog  log_entry here
         ctx.get_client()?;
         ctx.start_roaming().await?;
         ctx.save_roaming_session().await?;
@@ -56,6 +57,7 @@ impl JoinRequest {
 
     async fn get_home_net_id(&mut self) -> Result<()> {
         trace!("Getting home netid");
+        // TODO: messagelog  log_entry here
 
         trace!(join_eui = %self.join_request.join_eui, "Trying to get join-server client");
         let js_client = joinserver::get(&self.join_request.join_eui)?;
@@ -99,6 +101,7 @@ impl JoinRequest {
 
     async fn start_roaming(&mut self) -> Result<()> {
         trace!("Starting passive-roaming");
+        // TODO: messagelog  log_entry here
 
         let mut pr_req = backend::PRStartReqPayload {
             phy_payload: self.uplink_frame_set.phy_payload.to_vec()?,

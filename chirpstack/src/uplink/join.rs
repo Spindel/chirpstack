@@ -52,6 +52,7 @@ pub struct JoinRequest {
     s_nwk_s_int_key: Option<AES128Key>,
     nwk_s_enc_key: Option<AES128Key>,
     app_s_key: Option<common::KeyEnvelope>,
+    // TODO: Spindel add messagelog::log_entry here?
 }
 
 impl JoinRequest {
@@ -59,6 +60,7 @@ impl JoinRequest {
         let span = span!(Level::INFO, "join_request");
 
         if let Err(e) = JoinRequest::_handle(ufs).instrument(span).await {
+            // TODO: Spindel messagelog log result here
             match e.downcast_ref::<Error>() {
                 Some(Error::Abort) => {
                     // nothing to do
@@ -88,6 +90,7 @@ impl JoinRequest {
         }
     }
 
+    // TODO: Spindel, add messagelog as context passing here?
     async fn _handle(ufs: UplinkFrameSet) -> Result<()> {
         let mut ctx = JoinRequest {
             uplink_frame_set: ufs,
@@ -515,6 +518,7 @@ impl JoinRequest {
 
     async fn get_join_accept_from_js(&mut self) -> Result<()> {
         trace!("Getting join-accept from Join Server");
+        // TODO: Spindel, add messagelog special case for UseExternalJoinServer here? 
 
         let js_client = self.js_client.as_ref().unwrap();
         let region_network = config::get_region_network(&self.uplink_frame_set.region_config_id)?;

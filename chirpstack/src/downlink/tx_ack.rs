@@ -761,6 +761,7 @@ impl TxAck {
             gateway_id: df.downlink_frame.as_ref().unwrap().gateway_id.clone(),
         };
 
+        // TODO: Spindel, messagelog: Add log_event here
         metalog::log_downlink(&dm).await
     }
 
