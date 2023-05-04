@@ -1,3 +1,4 @@
+use crate::config;
 use ::backend::{
     BasePayload, HomeNSAnsPayload, HomeNSReqPayload, JoinAnsPayload, JoinReqPayload,
     PRStartAnsPayload, PRStartReqPayload, ULMetaData, XmitDataAnsPayload, XmitDataReqPayload,
@@ -80,10 +81,58 @@ pub enum Endpoint {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Serialize, Default)]
 pub enum FrameStatusResult {
-    #[default]
     OK,
+    #[default]
     NOK,
     WARN,
+}
+
+#[derive(Debug, Default)]
+pub struct LogEntryBuilder {
+    pub created_at: DateTime<Utc>,
+    pub log_source: Endpoint,
+    pub source_id: String,
+    pub log_destination: Endpoint,
+    pub destination_id: String, // String is the wrong type here, we should use NetID
+}
+
+impl LogEntryBuilder {
+    pub fn new() -> Self {
+        LogEntryBuilder {
+            created_at: Utc::now(),
+            ..Default::default()
+        }
+    }
+    pub fn log_source(mut self, v: Endpoint) -> Self {
+        self.log_source = v;
+        self
+    }
+    pub fn log_destination(mut self, v: Endpoint) -> Self {
+        self.log_destination = v;
+        self
+    }
+
+    pub fn our_desitnation_id(mut self) -> Self {
+        let conf = config::get();
+        self.destination_id = conf.network.net_id.to_string();
+        self
+    }
+
+    pub fn source_id(mut self, v: impl Into<String>) -> Self {
+        self.source_id = v.into();
+        self
+    }
+
+    pub fn build(self) -> LogEntry {
+        LogEntry {
+            created_at: self.created_at,
+            log_source: self.log_source,
+            source_id: self.source_id,
+            log_destination: self.log_destination,
+            destination_id: self.destination_id,
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Default)]

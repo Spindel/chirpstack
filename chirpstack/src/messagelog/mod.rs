@@ -1,4 +1,4 @@
-use tracing::info;
+use tracing::{error, info, trace};
 
 use anyhow::Result;
 
@@ -7,7 +7,8 @@ mod datatypes;
 
 use crate::config;
 pub use datatypes::{
-    Endpoint, FrameStatus, FrameStatusResult, LogEntry, RoamingMetaData, RxPacket, TxPacket,
+    Endpoint, FrameStatus, FrameStatusResult, LogEntry, LogEntryBuilder, RoamingMetaData, RxPacket,
+    TxPacket,
 };
 
 use self::backend::mqtt::MqttBackend;
@@ -29,4 +30,16 @@ pub async fn setup() -> Result<()> {
         }
     }
     Ok(())
+}
+
+// Send the log entry, always succeeds
+pub async fn send(msg: LogEntry) {
+    let guard = BACKEND.read().await;
+    if let Some(backend) = &*guard {
+        if let Err(e) = backend.log_message(msg).await {
+            error!(error = %e, "Messagelog failed to publish");
+        }
+    } else {
+        trace!(msg = ?msg, "Messagelog not configured");
+    }
 }
