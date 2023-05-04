@@ -1,4 +1,4 @@
-use backend::{
+use ::backend::{
     BasePayload, HomeNSAnsPayload, HomeNSReqPayload, JoinAnsPayload, JoinReqPayload,
     PRStartAnsPayload, PRStartReqPayload, ULMetaData, XmitDataAnsPayload, XmitDataReqPayload,
 };
@@ -12,7 +12,7 @@ use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
-struct RxPacket {
+pub struct RxPacket {
     // Seea crate::uplink::UplinkFrameSet and api::UplinkFrameLog  for similar but
     // not exactly the same data-structures
     #[serde(rename = "DR")]
@@ -50,7 +50,7 @@ pub struct RoamingMetaData {
 }
 
 #[derive(Debug, Clone, Serialize)]
-struct TxPacket {
+pub struct TxPacket {
     #[serde(rename = "PHYPayload")]
     phy_payload: lrwn::PhyPayload,
     #[serde(rename = "DownlinkTXInfo")]
@@ -62,14 +62,14 @@ struct TxPacket {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "PascalCase")]
-struct FrameStatus {
+pub struct FrameStatus {
     result: FrameStatusResult,
     error_desc: String,
 }
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "UPPERCASE")]
-enum Endpoint {
+pub enum Endpoint {
     Gateway,
     Local,
     Roaming,
@@ -77,7 +77,7 @@ enum Endpoint {
 }
 
 #[derive(Debug, Clone, Serialize)]
-enum FrameStatusResult {
+pub enum FrameStatusResult {
     OK,
     NOK,
     WARN,
@@ -85,7 +85,7 @@ enum FrameStatusResult {
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "PascalCase")]
-struct LogEntry {
+pub struct LogEntry {
     // CtxID          interface{}
     #[serde(rename = "CtxID")]
     ctx_id: Uuid,
@@ -166,9 +166,9 @@ struct LogEntry {
 mod test {
     use super::*;
     use lrwn::DevAddr;
+    use std::error::Error;
     use std::str::FromStr;
     use uuid::uuid;
-    use std::error::Error;
 
     #[test]
     fn test_json_format() -> Result<(), Box<dyn Error>> {

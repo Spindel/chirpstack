@@ -33,6 +33,7 @@ mod gateway;
 mod gpstime;
 mod integration;
 mod maccommand;
+mod messagelog;
 mod metalog;
 mod monitoring;
 mod region;

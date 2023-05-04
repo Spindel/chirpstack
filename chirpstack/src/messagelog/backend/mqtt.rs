@@ -1,42 +1,22 @@
-use std::collections::hash_map::DefaultHasher;
-use std::collections::HashMap;
-use std::env::temp_dir;
-use std::hash::Hasher;
-use std::io::Cursor;
-use std::sync::RwLock;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
-use futures::stream::StreamExt;
-use handlebars::Handlebars;
 use paho_mqtt as mqtt;
-use prometheus_client::encoding::EncodeLabelSet;
-use prometheus_client::metrics::counter::Counter;
-use prometheus_client::metrics::family::Family;
-use prost::Message;
 use rand::Rng;
-use serde::Serialize;
-use tokio::sync::mpsc;
-use tokio::task;
 use tracing::{error, info, trace};
 
-use super::GatewayBackend;
-use crate::config::GatewayBackendMqtt;
-use crate::monitoring::prometheus;
-use crate::storage::{get_redis_conn, redis_key};
-use crate::{downlink, uplink};
-use lrwn::region::CommonName;
+use crate::config::MessageLoggerBackendMqtt;
 
-pub struct MqttBackend<'a> {
+use crate::messagelog;
+
+pub struct MqttBackend {
     client: mqtt::AsyncClient,
     topic: String,
     qos: usize,
 }
 
-
-impl<'a> MqttBackend<'a> {
-    pub async fn new(conf: &MessageLoggerBackendMqtt) -> Result<MqttBackend<'a>> {
+impl MqttBackend {
+    pub async fn new(conf: &MessageLoggerBackendMqtt) -> Result<MqttBackend> {
         let topic = conf.log_topic.clone();
         // get client id, this will generate a random client_id when no client_id has been
         // configured.
@@ -52,7 +32,7 @@ impl<'a> MqttBackend<'a> {
         let create_opts = mqtt::CreateOptionsBuilder::new()
             .client_id(&client_id)
             .finalize();
-        let mut client = mqtt::AsyncClient::new(create_opts).context("Create MQTT client")?;
+        let client = mqtt::AsyncClient::new(create_opts).context("Create MQTT client")?;
 
         client.set_connected_callback(|_client| {
             info!("MQTT connection to messagelog backend.");
@@ -100,9 +80,6 @@ impl<'a> MqttBackend<'a> {
         }
         let conn_opts = conn_opts_b.finalize();
 
-        // get message stream
-        let mut stream = client.get_stream(25);
-
         let b = MqttBackend {
             client,
             topic,
@@ -119,17 +96,13 @@ impl<'a> MqttBackend<'a> {
         // return backend
         Ok(b)
     }
-}
 
-impl MessageLoggerBackend for MqttBackend<'_> {
-    async fn log_message(&self, log_entry: messagelog::LogEntry) -> Result<()> {
-        todo!();
+    pub async fn log_message(&self, log_entry: messagelog::LogEntry) -> Result<()> {
         let payload = serde_json::to_vec(&log_entry)?;
-        info!(topic = %self.topic, "Sending log mesage");
-        let msg = mqtt::Message::new(topic, payload, self.qos as i32);
+        info!(topic = %self.topic, "Sending log message");
+        let msg = mqtt::Message::new(&self.topic, payload, self.qos as i32);
         self.client.publish(msg).await?;
-        trace!("Message sent");
+        trace!("Log message sent");
         Ok(())
     }
 }
-
