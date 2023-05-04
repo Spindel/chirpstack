@@ -112,13 +112,8 @@ pub mod test {
     use super::*;
     use crate::test;
 
-    use std::str::FromStr;
-
-    use chrono::DateTime;
     use futures::stream::StreamExt;
 
-    use lrwn::DevAddr;
-    use lrwn::EUI64;
 
     use paho_mqtt as mqtt;
 
@@ -174,39 +169,7 @@ pub mod test {
         // TODO: Spindel, add test-case for HandleDownlinkTXAck (downlink /ack )
         //
 
-        let log_entry = messagelog::LogEntry {
-            publish_at: DateTime::parse_from_rfc3339("2023-05-03T11:58:41.21027935+02:00")
-                .unwrap()
-                .into(),
-            dev_addr: DevAddr::from_str("00000000").unwrap(),
-            ctx_id: uuid::uuid!("c2864e43-174a-42a9-a8a5-71b0bd87b644"),
-            known_device: true,
-            tx_packet: vec![],
-            time_on_air: 0.0,
-            created_at: DateTime::parse_from_rfc3339("2023-05-03T11:58:41.204119632+02:00")
-                .unwrap()
-                .into(),
-            dev_eui: EUI64::from_str("0080e1150044bb7a").unwrap(),
-            source_id: "600002".into(),
-            log_destination: messagelog::Endpoint::Gateway,
-            frame_status: messagelog::FrameStatus {
-                error_desc: "".to_string(),
-                result: messagelog::FrameStatusResult::NOK,
-            },
-            log_source: messagelog::Endpoint::Local,
-            destination_id: "647fdafffe00c7bb".into(),
-            home_ns_ans: None,
-            home_ns_req: None,
-            join_ans: None,
-            join_req: None,
-            pr_start_ans: None,
-            pr_start_req: None,
-            rx_packet: None,
-            tx_ack: None,
-            xmit_data_ans: None,
-            xmit_data_req: None,
-        };
-
+        let log_entry = messagelog::LogEntry::default();
         let expected = serde_json::to_string(&log_entry).unwrap();
         mqtt_backend.log_message(log_entry).await.unwrap();
         let msg = stream.next().await.unwrap().unwrap();

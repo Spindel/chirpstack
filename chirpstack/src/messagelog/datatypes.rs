@@ -77,6 +77,7 @@ pub enum Endpoint {
     JoinServer,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Serialize, Default)]
 pub enum FrameStatusResult {
     #[default]
@@ -84,21 +85,8 @@ pub enum FrameStatusResult {
     NOK,
     WARN,
 }
-/*
-impl Default for LogEntry {
-    pub fn default() -> Self {
-        LogEntry {
-            ctx_id: Default::default(),
-            publish_at: Default::default(),
-            created_at: Default::default(),
-            log_
 
-        }
-
-    }
-}
-*/
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 #[serde(rename_all = "PascalCase")]
 pub struct LogEntry {
     // CtxID          interface{}
