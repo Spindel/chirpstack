@@ -42,9 +42,35 @@ pub struct TxAck {
 impl TxAck {
     pub async fn handle(tx_ack: gw::DownlinkTxAck) {
         let span = span!(Level::TRACE, "tx_ack", downlink_id = tx_ack.downlink_id);
+        let mut elog = messagelog::LogEntryBuilder::new()
+            .log_source(messagelog::Endpoint::Gateway)
+            .source_id(&tx_ack.gateway_id)
+            .log_destination(messagelog::Endpoint::Local)
+            .our_desitnation_id()
+            .build();
+
         if let Err(e) = TxAck::_handle(tx_ack).instrument(span).await {
             error!(error = %e, "Handling tx ack error");
+            elog.frame_status.error_desc = e.to_string();
         }
+        else {
+            elog.frame_status.result = messagelog::FrameStatusResult::OK;
+        }
+        // TODO: Spindel
+        //  elog.tx_ack.phy_payload ....
+        // TODO: Spindel
+        //    elog.tx_ack.downlink_txinfo = self.downlink_frame_item.tx_info
+        //      elog.dev_eui = ...
+        //      elog.knwon_device = true 
+        //      elog.frame_status = ....  OK
+        //      
+        if self.phy_payload.is_some()
+        if let  Some(frame_item) = &self.downlink_frame_item {
+            elog.tx_ack = Some(messagelog::TxPacket {
+
+
+        }
+        messagelog::send(elog).await;
     }
 
     async fn _handle(tx_ack: gw::DownlinkTxAck) -> Result<()> {

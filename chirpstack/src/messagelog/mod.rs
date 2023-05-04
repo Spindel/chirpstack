@@ -6,7 +6,10 @@ mod backend;
 mod datatypes;
 
 use crate::config;
-pub use datatypes::{Endpoint, FrameStatus, FrameStatusResult, LogEntry, LogEntryBuilder};
+pub use datatypes::{
+    Endpoint, FrameStatus, FrameStatusResult, LogEntry, LogEntryBuilder, RoamingMetaData, RxPacket,
+    TxPacket,
+};
 
 use self::backend::mqtt::MqttBackend;
 use tokio::sync::RwLock;

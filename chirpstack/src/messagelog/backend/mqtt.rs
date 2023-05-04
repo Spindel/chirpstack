@@ -114,7 +114,6 @@ pub mod test {
 
     use futures::stream::StreamExt;
 
-
     use paho_mqtt as mqtt;
 
     // Helper to get a listen-able client for the test-case
