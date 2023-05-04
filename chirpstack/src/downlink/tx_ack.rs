@@ -28,6 +28,7 @@ pub struct TxAck {
     device_profile: Option<device_profile::DeviceProfile>,
     device: Option<device::Device>,
     device_queue_item: Option<device_queue::DeviceQueueItem>,
+    // TODO: Spindel, messagelog: Add log_event here
 }
 
 impl TxAck {
@@ -376,11 +377,13 @@ impl TxAck {
         let phy =
             lrwn::PhyPayload::from_slice(&self.downlink_frame_item.as_ref().unwrap().phy_payload)?;
         self.phy_payload = Some(phy);
+        // TODO: Spindel, messagelog: Add log_event here
 
         Ok(())
     }
 
     async fn log_downlink_frame(&mut self) -> Result<()> {
+        // TODO: Spindel, messagelog: Add log_event here??
         trace!("Logging downlink frame");
         let df = self.downlink_frame.as_ref().unwrap();
         let gw_df = df
@@ -522,6 +525,7 @@ impl TxAck {
             gateway_id: df.downlink_frame.as_ref().unwrap().gateway_id.clone(),
         };
 
+        // TODO: Spindel, messagelog: Add log_event here
         metalog::log_downlink(&dm).await
     }
 

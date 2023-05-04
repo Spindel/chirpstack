@@ -81,6 +81,7 @@ impl Data {
     }
 
     pub async fn handle_schedule_next_queue_item(device: device::Device) -> Result<()> {
+        // TODO: Spindel, messagelog,  add logentry here
         let span = span!(Level::TRACE, "schedule", dev_eui = %device.dev_eui);
 
         Data::_handle_schedule_next_queue_item(device)
