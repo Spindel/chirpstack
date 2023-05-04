@@ -106,3 +106,277 @@ impl MqttBackend {
         Ok(())
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+    use crate::test;
+
+    use std::str::FromStr;
+
+    use chrono::DateTime;
+    use futures::stream::StreamExt;
+
+    use lrwn::DevAddr;
+    use lrwn::EUI64;
+
+    use paho_mqtt as mqtt;
+
+    // Helper to get a listen-able client for the test-case
+    async fn make_mqtt_client() -> mqtt::AsyncClient {
+        // Set up a mqtt client
+        let create_opts = mqtt::CreateOptionsBuilder::new()
+            .server_uri("tcp://mosquitto:1883/")
+            .finalize();
+        let client = mqtt::AsyncClient::new(create_opts).unwrap();
+        let conn_opts = mqtt::ConnectOptionsBuilder::new()
+            .clean_session(true)
+            .finalize();
+        client.connect(conn_opts).await.unwrap();
+
+        client
+            .subscribe("messagelog/testcase", mqtt::QOS_0)
+            .await
+            .unwrap();
+        client
+    }
+
+    #[tokio::test]
+    async fn test_messagelog() {
+        // We don't use the backend here, as the test-case is only really testing the MQTT
+        // connection currently.
+        //
+        // It should be increased to test/verify our expected events as well.
+        let _guard = test::prepare().await;
+        let conf = MessageLoggerBackendMqtt {
+            log_topic: "messagelog/testcase".into(),
+            servers: vec!["tcp://mosquitto:1883/".into()],
+            ..Default::default()
+        };
+        let mqtt_backend = MqttBackend::new(&conf).await.unwrap();
+        let mut client = make_mqtt_client().await;
+        let mut stream = client.get_stream(10);
+
+        // TODO: Spindel,  add test-case for Roaming
+        //      backend.PRStartReq
+        //      backend.XmitDataReq
+        //      handlePRStartAns
+        //      handlePRStartReq
+        //      handlePRStartReqData
+
+        // TODO: Spindel, add test-case for HandleDownlinkTXAck (downlink /ack )
+        //  forJoinAcceptPayload
+        //
+        //
+        //
+        // uplink event
+
+        // TODO: Spindel, add test-case for HandleDownlinkTXAck (downlink /ack )
+        //
+
+        let log_entry = messagelog::LogEntry {
+            publish_at: DateTime::parse_from_rfc3339("2023-05-03T11:58:41.21027935+02:00")
+                .unwrap()
+                .into(),
+            dev_addr: DevAddr::from_str("00000000").unwrap(),
+            ctx_id: uuid::uuid!("c2864e43-174a-42a9-a8a5-71b0bd87b644"),
+            known_device: true,
+            tx_packet: vec![],
+            time_on_air: 0.0,
+            created_at: DateTime::parse_from_rfc3339("2023-05-03T11:58:41.204119632+02:00")
+                .unwrap()
+                .into(),
+            dev_eui: EUI64::from_str("0080e1150044bb7a").unwrap(),
+            source_id: "600002".into(),
+            log_destination: messagelog::Endpoint::Gateway,
+            frame_status: messagelog::FrameStatus {
+                error_desc: "".to_string(),
+                result: messagelog::FrameStatusResult::NOK,
+            },
+            log_source: messagelog::Endpoint::Local,
+            destination_id: "647fdafffe00c7bb".into(),
+            home_ns_ans: None,
+            home_ns_req: None,
+            join_ans: None,
+            join_req: None,
+            pr_start_ans: None,
+            pr_start_req: None,
+            rx_packet: None,
+            tx_ack: None,
+            xmit_data_ans: None,
+            xmit_data_req: None,
+        };
+
+        let expected = serde_json::to_string(&log_entry).unwrap();
+        mqtt_backend.log_message(log_entry).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(msg.payload_str(), expected);
+
+        /*
+        let pl = integration::UplinkEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.uplink_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/up",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // join event
+        let pl = integration::JoinEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.join_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/join",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // ack event
+        let pl = integration::AckEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.ack_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/ack",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // txack event
+        let pl = integration::TxAckEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.txack_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/txack",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // log event
+        let pl = integration::LogEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.log_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/log",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // status event
+        let pl = integration::StatusEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.status_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/status",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // location event
+        let pl = integration::LocationEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.location_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/location",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // integration event
+        let pl = integration::IntegrationEvent {
+            device_info: Some(integration::DeviceInfo {
+                application_id: Uuid::nil().to_string(),
+                dev_eui: "0102030405060708".to_string(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        i.integration_event(&HashMap::new(), &pl).await.unwrap();
+        let msg = stream.next().await.unwrap().unwrap();
+        assert_eq!(
+            "application/00000000-0000-0000-0000-000000000000/device/0102030405060708/event/integration",
+            msg.topic()
+        );
+        assert_eq!(serde_json::to_string(&pl).unwrap(), msg.payload_str());
+
+        // downlink command
+        let down_cmd = integration::DownlinkCommand {
+            id: Uuid::new_v4().to_string(),
+            dev_eui: dev.dev_eui.to_string(),
+            confirmed: false,
+            f_port: 10,
+            data: vec![1, 2, 3],
+            object: None,
+        };
+        let down_cmd_json = serde_json::to_string(&down_cmd).unwrap();
+        client
+            .publish(mqtt::Message::new(
+                format!("application/{}/device/{}/command/down", app.id, dev.dev_eui),
+                down_cmd_json,
+                mqtt::QOS_0,
+            ))
+            .await
+            .unwrap();
+
+        // give the async consumer some time to process
+        sleep(Duration::from_millis(200)).await;
+
+        let queue_items = device_queue::get_for_dev_eui(&dev.dev_eui).await.unwrap();
+        assert_eq!(1, queue_items.len());
+        assert_eq!(down_cmd.id, queue_items[0].id.to_string());
+        assert_eq!(dev.dev_eui, queue_items[0].dev_eui);
+        assert_eq!(10, queue_items[0].f_port);
+        assert_eq!(vec![1, 2, 3], queue_items[0].data);
+
+        */
+    }
+}

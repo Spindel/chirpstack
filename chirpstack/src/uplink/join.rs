@@ -373,7 +373,7 @@ impl JoinRequest {
 
     async fn get_join_accept_from_js(&mut self) -> Result<()> {
         trace!("Getting join-accept from Join Server");
-        // TODO: Spindel, add messagelog special case for UseExternalJoinServer here? 
+        // TODO: Spindel, add messagelog special case for UseExternalJoinServer here?
 
         let js_client = self.js_client.as_ref().unwrap();
         let region_network = config::get_region_network(&self.uplink_frame_set.region_config_id)?;
