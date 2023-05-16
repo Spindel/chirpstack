@@ -129,7 +129,7 @@ impl serialize::ToSql<Text, Pg> for IntegrationKind
 where
     str: serialize::ToSql<Text, Pg>,
 {
-    fn to_sql<'b>(&self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql(&self, out: &mut serialize::Output<'_, '_, Pg>) -> serialize::Result {
         <str as serialize::ToSql<Text, Pg>>::to_sql(&self.to_string(), &mut out.reborrow())
     }
 }
@@ -158,7 +158,7 @@ impl deserialize::FromSql<Jsonb, Pg> for IntegrationConfiguration {
 }
 
 impl serialize::ToSql<Jsonb, Pg> for IntegrationConfiguration {
-    fn to_sql<'b>(&self, out: &mut serialize::Output<'b, '_, Pg>) -> serialize::Result {
+    fn to_sql(&self, out: &mut serialize::Output<'_, '_, Pg>) -> serialize::Result {
         let value = serde_json::to_value(self)?;
         <serde_json::Value as serialize::ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
     }
@@ -201,6 +201,7 @@ pub struct LoraCloudConfiguration {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LoraCloudModemGeolocationServices {
     pub token: String,
     pub modem_enabled: bool,
@@ -208,6 +209,7 @@ pub struct LoraCloudModemGeolocationServices {
     pub gnss_port: u32,
     pub forward_f_ports: Vec<u32>,
     pub gnss_use_rx_time: bool,
+    pub gnss_use_gateway_location: bool,
     pub parse_tlv: bool,
     pub geolocation_buffer_ttl: u32,
     pub geolocation_min_buffer_size: u32,

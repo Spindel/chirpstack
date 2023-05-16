@@ -13,7 +13,7 @@ lazy_static! {
     static ref CONFIG: Mutex<Arc<Configuration>> = Mutex::new(Arc::new(Default::default()));
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Default, Serialize, Deserialize, Clone)]
 #[serde(default)]
 pub struct Configuration {
     pub logging: Logging,
@@ -31,28 +31,6 @@ pub struct Configuration {
     pub roaming: Roaming,
     pub keks: Vec<Kek>,
     pub regions: Vec<Region>,
-}
-
-impl Default for Configuration {
-    fn default() -> Self {
-        Configuration {
-            logging: Default::default(),
-            postgresql: Default::default(),
-            redis: Default::default(),
-            api: Default::default(),
-            gateway: Default::default(),
-            network: Default::default(),
-            monitoring: Default::default(),
-            integration: Default::default(),
-            codec: Default::default(),
-            user_authentication: Default::default(),
-            join_server: Default::default(),
-            backend_interfaces: Default::default(),
-            roaming: Default::default(),
-            keks: Vec::new(),
-            regions: vec![],
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -640,6 +618,7 @@ pub struct GatewayBackendMqtt {
     pub tls_key: String,
     #[serde(with = "humantime_serde")]
     pub keep_alive_interval: Duration,
+    pub v4_migrate: bool,
 }
 
 impl Default for GatewayBackendMqtt {
@@ -659,6 +638,7 @@ impl Default for GatewayBackendMqtt {
             tls_cert: "".into(),
             tls_key: "".into(),
             keep_alive_interval: Duration::from_secs(30),
+            v4_migrate: true,
         }
     }
 }
