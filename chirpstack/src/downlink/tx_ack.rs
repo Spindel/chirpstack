@@ -45,8 +45,7 @@ impl TxAck {
         if let Err(e) = TxAck::_handle(tx_ack).instrument(span).await {
             error!(error = %e, "Handling tx ack error");
             //elog.frame_status.error_desc = e.to_string();
-        }
-        else {
+        } else {
             // elog.frame_status.result = messagelog::FrameStatusResult::OK;
         }
         // TODO: Spindel: This is the wrong place as we do not see the final event in this
