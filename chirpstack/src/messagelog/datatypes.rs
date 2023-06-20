@@ -214,6 +214,43 @@ pub struct LogEntry {
     //        answer: Option<Answer>,
 }
 
+impl LogEntry {
+    pub fn calculate_and_set_time_on_air(&mut self) {
+        if let Some(rx_pkt) = &self.rx_packet {
+            if let Some(tx_info) = &rx_pkt.tx_info {
+                /* TODO: Spindel
+                 * The get_loar_modulation_info needs to be filled in but depends on a lot of
+                 * changed lora data structures
+                 */
+                // let time_on_air = packet_to_time_on_air(rx_pkt.phy_payload, tx_info.get_lora_modulation_info());
+                let time_on_air = 0.0001;
+                self.time_on_air = time_on_air;
+            }
+        } else if !self.tx_packet.is_empty() {
+            for tx_packet in self.tx_packet.iter() {
+                if let Some(down_tx_info) = &tx_packet.downlink_tx_info {
+                    /* TODO: Spindel
+                     * The get_lora_modulation_info needs to be filled in but depends on a lot of
+                     * changed lora data structures
+                     */
+                    // let time_on_air = packet_to_time_on_air(rx_pkt.phy_payload, tx_packet.phy_payload, tx_packet.downlink_tx_info.get_lora_modulation_info());
+                    let time_on_air = 0.00002;
+                    self.time_on_air = time_on_air;
+                }
+            }
+        } else if let Some(ref mut tx_ack) = &mut self.tx_ack {
+            if let Some(downlink_tx_info) = &tx_ack.downlink_tx_info {
+                // TODO: Spindel
+                // Same as above, modulation_info
+                // let time_on_air = packet_to_time_on_air(tx_ack.phy_payload, downlink_tx_info.get_lora_modulation_info());
+                let time_on_air = 0.00003;
+                tx_ack.time_on_air = time_on_air;
+                self.time_on_air = time_on_air;
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

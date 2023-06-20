@@ -97,7 +97,8 @@ impl MqttBackend {
         Ok(b)
     }
 
-    pub async fn log_message(&self, log_entry: messagelog::LogEntry) -> Result<()> {
+    pub async fn log_message(&self, mut log_entry: messagelog::LogEntry) -> Result<()> {
+        log_entry.calculate_and_set_time_on_air();
         let payload = serde_json::to_vec(&log_entry)?;
         info!(topic = %self.topic, "Sending log message");
         let msg = mqtt::Message::new(&self.topic, payload, self.qos as i32);
