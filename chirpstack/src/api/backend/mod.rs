@@ -14,6 +14,7 @@ use warp::{http::StatusCode, Filter, Reply};
 
 use crate::backend::{joinserver, keywrap, roaming};
 use crate::downlink::data_fns;
+use crate::messagelog::{self, Endpoint};
 use crate::storage::{
     device_session, error::Error as StorageError, get_redis_conn, passive_roaming, redis_key,
 };
@@ -79,6 +80,11 @@ pub async fn handle_request(mut body: impl warp::Buf) -> http::Response<hyper::B
         }
     };
 
+    let log_entry = messagelog::LogEntryBuilder::new()
+        .log_source(Endpoint::Roaming)
+        .source_id(hex::encode(&bp.sender_id))
+        .build();
+
     info!(sender_id = %hex::encode(&bp.sender_id), transaction_id = %bp.transaction_id, message_type = ?bp.message_type, "Request received");
 
     let sender_client = {
@@ -138,6 +144,9 @@ pub async fn handle_request(mut body: impl warp::Buf) -> http::Response<hyper::B
     // Request is an async answer.
     if bp.is_answer() {
         tokio::spawn(async move {
+            // TODO: Spindel
+            // Make an answer log entry ( source: local, sourcid:  our setting,
+            // logdestination : roaming,  destination_id pl.sender_id
             if let Err(e) = handle_async_ans(&bp, &b).await {
                 error!(error = %e, "Handle async answer error");
             }
@@ -213,6 +222,8 @@ async fn handle_pr_start_req(
 async fn _handle_pr_start_req(b: &[u8]) -> Result<backend::PRStartAnsPayload> {
     let pl: backend::PRStartReqPayload = serde_json::from_slice(b)?;
     let phy = lrwn::PhyPayload::from_slice(&pl.phy_payload)?;
+    // TODO: Spindel
+    // Add phy.fhdr.devaddr to LogEntry here
 
     if phy.mhdr.m_type == lrwn::MType::JoinRequest {
         _handle_pr_start_req_join(pl, phy).await
@@ -396,6 +407,9 @@ async fn handle_xmit_data_req(
         }
     };
 
+    // TODO: Spindel
+    //  make log_entry.xmit_data_req = &pl;
+
     if sender_client.is_async() {
         task::spawn(async move {
             let sender_role = if pl.ul_meta_data.is_some() {
@@ -457,12 +471,21 @@ async fn _handle_xmit_data_req(
             }),
         };
 
+        // TODO: Spindel
+        // Thie data_sns / data_fns wrap around uplink::data::handle,
+        // which explicitly never passes errors on to this code.
         data_sns::Data::handle(ufs).await;
     }
 
     if let Some(dl_meta_data) = &pl.dl_meta_data {
+        // TODO: Spindel
+        // Thie data_sns / data_fns wrap around uplink::data::handle,
+        // which explicitly never passes errors on to this code.
         data_fns::Data::handle(pl.clone(), dl_meta_data.clone()).await?;
     }
+
+    // TODO: Spindel
+    // Annotate log_entry.FrameStatus as Result ok here.
 
     Ok(backend::XmitDataAnsPayload {
         base: pl

@@ -158,7 +158,9 @@ impl Data {
         net_id: NetID,
     ) -> Result<internal::PassiveRoamingDeviceSession> {
         info!(net_id = %net_id, dev_addr = %self.mac_payload.fhdr.devaddr, "Starting passive-roaming session");
-        // TODO: Spindel, messagelog: Add log_event here
+        // TODO: Spindel
+        // messagelog: Add log_event here
+        //    needs pr_start_ans: PRStartAnsPayload
 
         let mut pr_req = backend::PRStartReqPayload {
             phy_payload: self.uplink_frame_set.phy_payload.to_vec()?,
