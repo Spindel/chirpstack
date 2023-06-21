@@ -80,11 +80,6 @@ pub async fn handle_request(mut body: impl warp::Buf) -> http::Response<hyper::B
         }
     };
 
-    let log_entry = messagelog::LogEntryBuilder::new()
-        .log_source(Endpoint::Roaming)
-        .source_id(hex::encode(&bp.sender_id))
-        .build();
-
     info!(sender_id = %hex::encode(&bp.sender_id), transaction_id = %bp.transaction_id, message_type = ?bp.message_type, "Request received");
 
     let sender_client = {
@@ -140,6 +135,11 @@ pub async fn handle_request(mut body: impl warp::Buf) -> http::Response<hyper::B
             return warp::reply::json(&pl).into_response();
         }
     };
+
+    let log_entry = messagelog::LogEntryBuilder::new()
+        .log_source(Endpoint::Roaming)
+        .source_id(hex::encode(&bp.sender_id))
+        .build();
 
     // Request is an async answer.
     if bp.is_answer() {
