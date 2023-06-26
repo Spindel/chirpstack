@@ -312,8 +312,24 @@ pub async fn handle_uplink(deduplication_id: Uuid, uplink: gw::UplinkFrameSet) -
         .context("log_uplink_for_gateways error")?;
 
     debug!("Creating uplink frame for messagelog");
-    // TODO: Inject LogEntry here
-    //let log_entry = messagelog::LogEntry { }
+    let mut log_entry = messagelog::LogEntryBuilder::new()
+        .log_source(messagelog::Endpoint::Gateway)
+        .log_destination(messagelog::Endpoint::Local)
+        .our_desitnation_id()
+        .build();
+
+    // TODO: Spindel Do we really need to move this data here?
+    // Maybe we should instead keep a reference for later or move error handling?
+    //
+    // Also, uplinkFrameset is an data structure we should probably replicate-ish as a From in the
+    // builder
+    log_entry.rx_packet = Some(messagelog::RxPacket {
+        dr: 0, uplink.dr,
+        tx_info: ul.tx_info.clone(),
+        rx_info_set: ufl.rx_info_set.clone(),
+        ..Default::default(),
+    });
+
 
     match uplink.phy_payload.mhdr.m_type {
         MType::JoinRequest => join::JoinRequest::handle(uplink).await,

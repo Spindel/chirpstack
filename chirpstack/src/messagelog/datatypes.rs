@@ -12,12 +12,15 @@ use lrwn::EUI64;
 use std::collections::HashMap;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct RxPacket {
     // Seea crate::uplink::UplinkFrameSet and api::UplinkFrameLog  for similar but
     // not exactly the same data-structures
     #[serde(rename = "DR")]
     pub dr: i64,
+
+    #[serde(rename = "PHYPayload")]
+    pub phy_payload: lrwn::PhyPayload,
 
     #[serde(rename = "TXInfo")]
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -29,14 +32,22 @@ pub struct RxPacket {
 
     #[serde(rename = "GatewayIsPrivate")] // Hmm. Should this be remaining as-is or split the way
     // uplink data does it in v4?
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub gateway_is_private: HashMap<EUI64, bool>,
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    // pub gateway_is_private: HashMap<EUI64, bool>,
 
-    #[serde(rename = "GatewayServiceProfile")]
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub gateway_service_profile: HashMap<EUI64, Uuid>, // This one is probably renamed
-    // gateway_tenant_id_map   rather than
-    // gateway_service_profile
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub gateway_private_up_map: HashMap<EUI64, bool>,
+
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub gateway_private_down_map: HashMap<EUI64, bool>,
+
+    // #[serde(rename = "GatewayServiceProfile")]
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    // pub gateway_service_profile: HashMap<EUI64, Uuid>, // This one is probably renamed gateway_tenant_id_map
+                                                       
+    // #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub gateway_tenant_id_map: HashMap<EUI64, Uuid>,
+
     #[serde(rename = "RoamingMetaData")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub roaming_meta_data: Option<RoamingMetaData>,
