@@ -52,15 +52,24 @@ pub struct JoinRequest {
     s_nwk_s_int_key: Option<AES128Key>,
     nwk_s_enc_key: Option<AES128Key>,
     app_s_key: Option<common::KeyEnvelope>,
-    // TODO: Spindel add messagelog::log_entry here?
 }
 
 impl JoinRequest {
     pub async fn handle(ufs: UplinkFrameSet) {
         let span = span!(Level::INFO, "join_request");
 
+        let mut log_entry = messagelog::LogEntryBuilder::new()
+            .log_source(messagelog::Endpoint::Gateway)
+            .log_destination(messagelog::Endpoint::Local)
+            .our_desitnation_id()
+            .uplink_frameset(ufs.clone())
+            .build();
+
         if let Err(e) = JoinRequest::_handle(ufs).instrument(span).await {
-            // TODO: Spindel messagelog log result here
+            log_entry.frame_status =  messagelog::FrameStatus {
+                error_desc: format!("{e}"),
+                result: messagelog::FrameStatusResult::NOK,
+            };
             match e.downcast_ref::<Error>() {
                 Some(Error::Abort) => {
                     // nothing to do
@@ -70,6 +79,10 @@ impl JoinRequest {
                 }
             }
         }
+        else {
+            log_entry.frame_status.result = messagelog::FrameStatusResult::OK;
+        }
+        messagelog::send(log_entry).await;
     }
 
     pub async fn handle_relayed(relay_ctx: RelayContext, ufs: UplinkFrameSet) {
@@ -90,8 +103,7 @@ impl JoinRequest {
         }
     }
 
-    // TODO: Spindel, add messagelog as context passing here?
-    async fn _handle(ufs: UplinkFrameSet) -> Result<()> {
+    async fn _handle(ufs: UplinkFrameSet, log_entry: &mut message::LogEntry) -> Result<()> {
         let mut ctx = JoinRequest {
             uplink_frame_set: ufs,
             relay_context: None,
@@ -142,6 +154,7 @@ impl JoinRequest {
         ctx.flush_device_queue().await?;
         ctx.set_device_mode().await?;
         ctx.set_dev_addr().await?;
+        log_entry.dev_addr = ctx.dev_addr.clone();
         ctx.set_join_eui().await?;
         ctx.start_downlink_join_accept_flow().await?;
         ctx.send_join_event().await?;

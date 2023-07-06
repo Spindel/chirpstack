@@ -6,6 +6,7 @@ use std::time::{Duration, SystemTime};
 
 use anyhow::{Context, Result};
 use prost::Message;
+use serde::Serialize;
 use tokio::task;
 use tokio::time::sleep;
 use tracing::{debug, error, info, span, trace, warn, Instrument, Level};
@@ -39,7 +40,7 @@ pub struct RelayContext {
     pub must_ack: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct UplinkFrameSet {
     pub uplink_set_id: Uuid,
     pub dr: u8,
